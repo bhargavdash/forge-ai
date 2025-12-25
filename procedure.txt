@@ -1,0 +1,259 @@
+Phase 0 — Week 0 Goals
+
+By the end of this phase:
+
+Repo structure is clean
+
+Backend runs
+
+Frontend runs
+
+DB connects
+
+Auth works
+
+No agents yet
+
+Step 1 — Repo & Project Structure (Day 1)
+Recommended structure
+forge-ai/
+├── apps/
+│   ├── frontend/        # React app
+│   └── backend/         # Express app
+├── packages/
+│   ├── shared/          # Shared types, constants
+│   └── db/              # Prisma schema
+├── docs/
+│   └── architecture.md
+├── .env.example
+├── package.json
+└── README.md
+
+
+Use:
+
+pnpm or npm workspaces
+
+TypeScript everywhere
+
+This will pay off later when agents grow.
+
+Step 2 — Backend First (Always)
+Backend stack
+
+Node.js 20
+
+Express
+
+TypeScript
+
+Prisma
+
+Supabase Postgres
+
+Do NOT add queues, workers, or sandboxes yet.
+
+Minimal backend setup checklist
+
+Express server boots
+
+Health endpoint: /health
+
+Env loading
+
+Prisma connects to Supabase
+
+Basic logging
+
+Example routes:
+
+GET /health
+GET /me (authenticated)
+
+Step 3 — Supabase Setup (Day 1–2)
+What to configure in Supabase dashboard
+
+Create project
+
+Enable GitHub OAuth
+
+Get:
+
+Project URL
+
+Anon key
+
+Service role key
+
+Enable pgvector extension
+
+Tables (initial)
+users
+repositories
+tasks
+task_logs
+
+
+Keep schemas boringly simple.
+
+Step 4 — Auth Flow (Critical)
+
+You have two good options:
+
+Option A (Recommended): Supabase Auth → Backend Trust
+
+Flow:
+
+Frontend → Supabase Auth (GitHub)
+        → JWT
+        → Backend verifies JWT
+
+
+Backend does not handle OAuth directly.
+
+This saves:
+
+OAuth complexity
+
+Token refresh logic
+
+Session storage
+
+Step 5 — Frontend (Minimal)
+
+Do NOT overbuild UI.
+
+Initial screens:
+
+Login
+
+Dashboard (placeholder)
+
+“Connected” state
+
+You are validating:
+
+Auth
+
+API calls
+
+App wiring
+
+Nothing else.
+
+3. How to Think About the Rest of the Build
+
+Here is the correct build order for Forge.
+
+Phase 1 — Skeleton (No AI Yet)
+
+Repo connection (GitHub API)
+
+Issue fetching
+
+Task creation
+
+Task persistence
+
+Task state enum
+
+At this stage:
+
+“AI” can literally be a stub function returning dummy data.
+
+This is intentional.
+
+Phase 2 — First Real Agent (Planner Only)
+
+LLM Gateway
+
+Planner agent
+
+Read issue → plan output
+
+Store plan in DB
+
+No coding, no tests, no PRs yet.
+
+Phase 3 — Coder Agent (Happy Path Only)
+
+Apply plan to codebase
+
+Generate diffs
+
+Commit locally
+
+Create PR
+
+No sandbox yet.
+
+Phase 4 — Sandbox + Fix Loop
+
+Only after everything above works:
+
+E2B integration
+
+Test execution
+
+Retry logic
+
+Key Rule Going Forward
+
+Never add two new hard things at the same time.
+
+Examples of “hard things”:
+
+Agent orchestration
+
+Sandbox execution
+
+OAuth
+
+GitHub API
+
+State machines
+
+One at a time.
+
+Final Answer Summary
+
+Database choice:
+✅ Supabase Postgres
+
+Why:
+
+Solves auth + admin + infra
+
+Keeps focus on agent logic
+
+Free-tier friendly
+
+Your next concrete steps:
+
+Create repo + workspace structure
+
+Boot Express backend
+
+Setup Supabase project
+
+Wire Prisma → Supabase
+
+Implement auth flow
+
+Minimal frontend login
+
+Once that’s done, we move to:
+
+Task model → Orchestrator skeleton → Planner agent
+
+If you want, next we can:
+
+Design your initial Prisma schema
+
+Set up Supabase + Prisma correctly
+
+Define Task state machine v1
+
+Write LLM Gateway interface
+
+Say the word and we’ll go step by step.
