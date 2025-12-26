@@ -13,19 +13,18 @@ router.get('/get-tasks', async (req, res) => {
   return res.json(tasks);
 });
 
-
 // -------------------------------------------------------------
 
 // route to post new task
-router.post('/post-task', async(req: Request, res: Response) => {
-  try{
+router.post('/post-task', async (req: Request, res: Response) => {
+  try {
     // get github url from req body
     const { githubIssueUrl } = req.body;
 
-    if(!githubIssueUrl){
+    if (!githubIssueUrl) {
       return res.status(400).json({
-        error: 'Github issue url is required'
-      })
+        error: 'Github issue url is required',
+      });
     }
 
     // create a new task in db and return the task id along with status
@@ -34,43 +33,42 @@ router.post('/post-task', async(req: Request, res: Response) => {
         githubIssueUrl,
         status: 'QUEUED',
         currentStep: 'NONE',
-      }
-    })
+      },
+    });
 
     processTask(task.id);
 
-    return res.status(200).json({taskId: task.id})
-  }catch(err){
+    return res.status(200).json({ taskId: task.id });
+  } catch (err) {
     console.log(err);
     return res.status(500).json({
       message: 'Internal server error',
-    })
+    });
   }
-})
+});
 
 // route to get task by id and metadata
-router.get('/get-task/:id', async(req, res) => {
-  try{
+router.get('/get-task/:id', async (req, res) => {
+  try {
     // extract id from req params
     const taskId = req.params.id;
 
     const task = await prisma.task.findUnique({
       where: {
-        id: taskId
-      }
-    })
+        id: taskId,
+      },
+    });
 
-    if(!task){
+    if (!task) {
       return res.status(400).json({
-        error: `Task with id ${taskId} not found!!`
-      })
+        error: `Task with id ${taskId} not found!!`,
+      });
     }
 
     return res.status(200).json(task);
-    
-  } catch(err){
+  } catch (err) {
     console.log(err);
   }
-} )
+});
 
 export default router;

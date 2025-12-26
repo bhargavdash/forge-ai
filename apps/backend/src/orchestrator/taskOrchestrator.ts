@@ -1,68 +1,69 @@
-// this is the orchestrator code 
-// takes taskId as input and periodically updates the status in the db 
+// this is the orchestrator code
+// takes taskId as input and periodically updates the status in the db
 
-import prisma from "../lib/prisma";
+import prisma from '../lib/prisma';
+import { planTask } from '../planner/taskPlanner';
 
-export const processTask = async(taskId: string) => {
-    try{
-        // update the task in the db for different steps
+export const processTask = async (taskId: string) => {
+  try {
+    // update the task in the db for different steps
 
-        // 1. Take up the new task and put it from queued to running
-        await prisma.task.update({
-            where: {
-                id: taskId
-            },
-            data: {
-                status: 'RUNNING',
-                currentStep: 'PLANNING'
-            }
-        })
+    // 1. Take up the new task and put it from queued to running
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: 'RUNNING',
+        currentStep: 'PLANNING',
+      },
+    });
 
-        // 2. Next is planning state which will be done with AI 
-        console.log(`[TASK ${taskId}] planning step started ...`);
+    // 2. Next is planning state which will be done with AI
+    console.log(`[TASK ${taskId}] planning step started ...`);
 
-        // placeholder for future AI planning 
-        await fakeDelay();
+    // placeholder for future AI planning
+    await planTask(taskId);
 
-        // 3. Move to coding step 
-        await prisma.task.update({
-            where: {
-                id: taskId
-            },
-            data: {
-                currentStep: 'CODING'
-            }
-        })
+    // 3. Move to coding step
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        currentStep: 'CODING',
+      },
+    });
 
-        console.log(`[TASK ${taskId}] coding step started ...`);
+    console.log(`[TASK ${taskId}] coding step started ...`);
 
-        await fakeDelay();
+    await fakeDelay();
 
-        // 3. Mark step as completed
-        await prisma.task.update({
-            where: {
-                id: taskId
-            },
-            data: {
-                status: 'COMPLETED',
-                currentStep: 'DONE'
-            }
-        })
+    // 3. Mark step as completed
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: 'COMPLETED',
+        currentStep: 'DONE',
+      },
+    });
 
-        console.log(`[TASK ${taskId}] completed successfully !!!`);
-    } catch(err: any){
-        await prisma.task.update({
-            where: {
-                id: taskId
-            },
-            data: {
-                status: 'FAILED',
-                errorMessage: err.message ?? "Unknown error" 
-            }
-        })
-        console.error(`[Task ${taskId}] Failed..`, err);
-    }
-} 
+    console.log(`[TASK ${taskId}] completed successfully !!!`);
+  } catch (err: any) {
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: 'FAILED',
+        errorMessage: err.message ?? 'Unknown error',
+      },
+    });
+    console.error(`[Task ${taskId}] Failed..`, err);
+  }
+};
 
-// Set a delay of 1 second in execution flow 
+// Set a delay of 1 second in execution flow
 const fakeDelay = () => new Promise((resolve) => setTimeout(resolve, 1000));

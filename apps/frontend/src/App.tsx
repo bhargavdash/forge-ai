@@ -1,48 +1,54 @@
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import axios from 'axios';
+import { useEffect, useRef, useState } from 'react';
+
+type TaskPlan = {
+  summary: string;
+  steps: string[];
+};
 
 function App() {
   const [taskId, setTaskId] = useState('');
   const [taskStatus, setTaskStatus] = useState('QUEUED');
+  const [taskPlan, setTaskPlan] = useState<TaskPlan | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if(!taskId || taskStatus === 'COMPLETED' || taskStatus === 'FAILED') return;
+    if (!taskId || taskStatus === 'COMPLETED' || taskStatus === 'FAILED') return;
 
-    console.log("calling polling api...");
+    console.log('calling polling api...');
 
     const getStatus = async () => {
-      try{
+      try {
         const response = await axios.get(`http://localhost:3000/tasks/get-task/${taskId}`);
 
         console.log(response);
 
         setTaskStatus(response.data.status);
-      } catch(err){
+        setTaskPlan(response.data.plan);
+      } catch (err) {
         console.log(err);
       }
-    }
+    };
 
     const interval = setInterval(() => {
       getStatus();
     }, 500);
 
-    // cleanup 
+    // cleanup
     return () => clearInterval(interval);
+  }, [taskId, taskStatus]);
 
-  }, [taskId, taskStatus])
- 
   const handleClick = async () => {
-    console.log("URL is: ", inputRef.current?.value);
+    console.log('URL is: ', inputRef.current?.value);
 
     // send axios request to backend server and get taskId , then store it in frontend
-    const response = await axios.post("http://localhost:3000/tasks/post-task", {
-      githubIssueUrl: inputRef.current?.value
-    })
+    const response = await axios.post('http://localhost:3000/tasks/post-task', {
+      githubIssueUrl: inputRef.current?.value,
+    });
 
     console.log(response);
     setTaskId(response.data.taskId);
-  }
+  };
 
   return (
     <>
@@ -56,8 +62,22 @@ function App() {
         {taskId && <span>{taskId}</span>}
         <div>{taskStatus}</div>
       </div>
+      <div>
+        {taskPlan && (
+          <div>
+            <h3>Summary:</h3>
+            <div>{taskPlan.summary}</div>
+            <h3>Steps:</h3>
+            <ol>
+              {taskPlan.steps.map((step, index) => (
+                <li key={index}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
     </>
-  )
+  );
 }
 
 export default App;
