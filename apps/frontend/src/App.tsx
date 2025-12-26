@@ -7,7 +7,7 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if(!taskId || taskStatus === 'COMPLETED') return;
+    if(!taskId || taskStatus === 'COMPLETED' || taskStatus === 'FAILED') return;
 
     console.log("calling polling api...");
 
