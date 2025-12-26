@@ -20,9 +20,22 @@ enum TaskStatus {
   FAILED 
 }
 
+enum TaskStep {
+  NONE 
+  PLANNING 
+  CODING 
+  TESTING 
+  FIXING 
+  DONE
+}
+
 model Task {
-  id        String       @id    @default(uuid())
-  status    TaskStatus   @default(QUEUED)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id              String       @id    @default(uuid())
+  githubIssueUrl  String
+  status          TaskStatus   @default(QUEUED)
+  currentStep     TaskStep     @default(NONE)
+  errorMessage    String?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }

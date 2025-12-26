@@ -1,31 +1,63 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [taskId, setTaskId] = useState('');
+  const [taskStatus, setTaskStatus] = useState('QUEUED');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if(!taskId || taskStatus === 'COMPLETED') return;
+
+    console.log("calling polling api...");
+
+    const getStatus = async () => {
+      try{
+        const response = await axios.get(`http://localhost:3000/tasks/get-task/${taskId}`);
+
+        console.log(response);
+
+        setTaskStatus(response.data.status);
+      } catch(err){
+        console.log(err);
+      }
+    }
+
+    const interval = setInterval(() => {
+      getStatus();
+    }, 500);
+
+    // cleanup 
+    return () => clearInterval(interval);
+
+  }, [taskId, taskStatus])
+ 
+  const handleClick = async () => {
+    console.log("URL is: ", inputRef.current?.value);
+
+    // send axios request to backend server and get taskId , then store it in frontend
+    const response = await axios.post("http://localhost:3000/tasks/post-task", {
+      githubIssueUrl: inputRef.current?.value
+    })
+
+    console.log(response);
+    setTaskId(response.data.taskId);
+  }
 
   return (
     <>
+      <h1>Forge AI</h1>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <input type="text" ref={inputRef} placeholder="Enter github url" />
+        <button onClick={handleClick}>Submit</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div>
+        <h3>Task status: </h3>
+        {taskId && <span>{taskId}</span>}
+        <div>{taskStatus}</div>
       </div>
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
     </>
-  );
+  )
 }
 
 export default App;
