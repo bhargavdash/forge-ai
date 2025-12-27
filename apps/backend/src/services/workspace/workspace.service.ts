@@ -55,6 +55,7 @@ export const setupWorkspace = async (
       },
       data: {
         workspacePath: workspaceRoot,
+        repoUrl,
         repoOwner: parsedUrl.owner,
         repoName: parsedUrl.repo,
         repoTree: repoTree as unknown as Prisma.InputJsonValue,
