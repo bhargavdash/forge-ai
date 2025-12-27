@@ -3,8 +3,9 @@
 
 import prisma from '../lib/prisma';
 import { planTask } from '../planner/taskPlanner';
+import { setupWorkspace } from '../services/workspace/workspace.service';
 
-export const processTask = async (taskId: string) => {
+export const processTask = async (taskId: string, issueUrl: string) => {
   try {
     // update the task in the db for different steps
 
@@ -22,7 +23,11 @@ export const processTask = async (taskId: string) => {
     // 2. Next is planning state which will be done with AI
     console.log(`[TASK ${taskId}] planning step started ...`);
 
-    // placeholder for future AI planning
+    // 2.1 Setup workspace before calling planner agent
+    
+    await setupWorkspace(taskId, issueUrl);
+
+    // call the planner agent 
     await planTask(taskId);
 
     // 3. Move to coding step

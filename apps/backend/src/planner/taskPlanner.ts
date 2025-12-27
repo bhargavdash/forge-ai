@@ -15,7 +15,7 @@ export type TaskPlan = {
 
 export const planTask = async (taskId: string) => {
   try {
-    // get task from db
+    // get task from db (now it contains the index tree written by repoIndexer inside setupWorkspace)
     const task = await prisma.task.findUnique({
       where: {
         id: taskId,
@@ -26,23 +26,24 @@ export const planTask = async (taskId: string) => {
       throw new Error('Task not found');
     }
 
-    // 1. parse the github url 
-    const match = task.githubIssueUrl.match(
-      /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/
-    )
+    // 1. parse the github url
+    const parsedRepo = parseRepoUrl(task.issueUrl);
 
-    if(!match){
-      throw new Error("Invalid github url format")
+    if (!parsedRepo) {
+      throw new Error('Could not parse repo url');
     }
-
-    const [, owner, repo, issueNumber] = match;
-
-    // 2. Fetch issue 
-    // this returns us the title and body of the issue 
-    const issue = await fetchGithubIssue(owner, repo, issueNumber);
+    // 2. Fetch issue
+    // this returns us the title and body of the issue
+    const issue = await fetchGithubIssue(parsedRepo.owner, parsedRepo.repo, parsedRepo.issueNumber);
 
     // 3. build the prompt
-    const prompt = buildPlanningPrompt(issue.title, issue.body, `${owner}/${repo}`);
+    const prompt = buildPlanningPrompt(
+      issue.title,
+      issue.body,
+      parsedRepo.owner,
+      parsedRepo.repo,
+      task.repoTree
+    );
 
     // 4. Call Gemini
     const plan = await generatePlan(prompt);
@@ -68,12 +69,12 @@ const generatePlan = async (prompt: string): Promise<TaskPlan> => {
    * This stub lets you test end-to-end flow.
    */
   const response = await geminiModel(prompt);
-  
-  if(response && response.text){
+
+  if (response && response.text) {
     const parsedResponse: TaskPlan = JSON.parse(response.text);
     return {
       summary: parsedResponse.summary,
-      steps: parsedResponse.steps
+      steps: parsedResponse.steps,
     };
   }
   return {
@@ -86,4 +87,21 @@ const generatePlan = async (prompt: string): Promise<TaskPlan> => {
       'Verify the solution',
     ],
   };
+};
+
+export const parseRepoUrl = (issueUrl: string) => {
+  try {
+    const match = issueUrl.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/);
+
+    if (!match) {
+      throw new Error('Invalid github url format');
+    }
+
+    const [, owner, repo, issueNumber] = match;
+
+    return { owner, repo, issueNumber };
+  } catch (err) {
+    console.log('Could not parse repo url');
+    return;
+  }
 };

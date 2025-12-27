@@ -29,10 +29,20 @@ enum TaskStep {
   DONE
 }
 
+
 model Task {
   id              String       @id    @default(uuid())
-  githubIssueUrl  String
+  issueUrl        String
+  
   status          TaskStatus   @default(QUEUED)
+  
+  repoUrl         String?
+  repoOwner       String?
+  repoName        String?
+
+  workspacePath   String?
+  repoTree        Json?
+
   currentStep     TaskStep     @default(NONE)
   errorMessage    String?
   plan            Json?

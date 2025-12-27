@@ -19,9 +19,9 @@ router.get('/get-tasks', async (req, res) => {
 router.post('/post-task', async (req: Request, res: Response) => {
   try {
     // get github url from req body
-    const { githubIssueUrl } = req.body;
+    const { issueUrl } = req.body;
 
-    if (!githubIssueUrl) {
+    if (!issueUrl) {
       return res.status(400).json({
         error: 'Github issue url is required',
       });
@@ -30,13 +30,13 @@ router.post('/post-task', async (req: Request, res: Response) => {
     // create a new task in db and return the task id along with status
     const task = await prisma.task.create({
       data: {
-        githubIssueUrl,
+        issueUrl,
         status: 'QUEUED',
         currentStep: 'NONE',
       },
     });
 
-    processTask(task.id);
+    processTask(task.id, task.issueUrl);
 
     return res.status(200).json({ taskId: task.id });
   } catch (err) {

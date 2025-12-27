@@ -43,7 +43,7 @@ function App() {
 
     // send axios request to backend server and get taskId , then store it in frontend
     const response = await axios.post('http://localhost:3000/tasks/post-task', {
-      githubIssueUrl: inputRef.current?.value,
+      issueUrl: inputRef.current?.value,
     });
 
     console.log(response);

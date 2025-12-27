@@ -26,8 +26,8 @@ export const fetchGithubIssue = async (
   } catch (err) {
     console.log(err);
     return {
-        title: '',
-        body: null
-    }
+      title: '',
+      body: null,
+    };
   }
 };
