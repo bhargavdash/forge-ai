@@ -1,6 +1,7 @@
 // this is the orchestrator code
 // takes taskId as input and periodically updates the status in the db
 
+import { runCoderAgent } from '../coder/coderAgent';
 import prisma from '../lib/prisma';
 import { planTask } from '../planner/taskPlanner';
 import { setupWorkspace } from '../services/workspace/workspace.service';
@@ -24,12 +25,37 @@ export const processTask = async (taskId: string, issueUrl: string) => {
     console.log(`[TASK ${taskId}] planning step started ...`);
 
     // 2.1 Setup workspace before calling planner agent
-    
-    await setupWorkspace(taskId, issueUrl);
 
-    // call the planner agent 
-    await planTask(taskId);
+    const workspaceSetup = await setupWorkspace(taskId, issueUrl);
 
+    if (!workspaceSetup.success || !workspaceSetup.repoTree || !workspaceSetup.workspacePath) {
+      // // step failed
+      // // TODO: update prisma
+      // await prisma.task.update({
+      //   where: {
+      //     id: taskId
+      //   },
+      //   data: {
+      //     status: 'FAILED',
+      //     currentStep: 'DONE'
+      //   }
+      // })
+
+      // // for now we return from here , will handle it gracefully later
+      // return;
+
+      // throw error that step has failed
+      throw new Error('Workspace setup failed');
+    }
+
+    const { workspacePath, repoTree } = workspaceSetup;
+
+    // 2.2 call the planner agent
+    const plan = await planTask(taskId);
+
+    if (!plan.success || !plan.summary || !plan.steps?.length) {
+      throw new Error('Could not plan task using LLM');
+    }
     // 3. Move to coding step
     await prisma.task.update({
       where: {
@@ -42,7 +68,19 @@ export const processTask = async (taskId: string, issueUrl: string) => {
 
     console.log(`[TASK ${taskId}] coding step started ...`);
 
-    await fakeDelay();
+    const coderAgentResult = await runCoderAgent(
+      taskId,
+      {
+        summary: plan.summary,
+        steps: plan.steps,
+      },
+      repoTree,
+      workspacePath
+    );
+
+    if (!coderAgentResult.success) {
+      throw new Error('Coding stage failed');
+    }
 
     // 3. Mark step as completed
     await prisma.task.update({
@@ -69,6 +107,3 @@ export const processTask = async (taskId: string, issueUrl: string) => {
     console.error(`[Task ${taskId}] Failed..`, err);
   }
 };
-
-// Set a delay of 1 second in execution flow
-const fakeDelay = () => new Promise((resolve) => setTimeout(resolve, 1000));

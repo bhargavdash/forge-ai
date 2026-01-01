@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { cloneRepo } from './repoCloner';
-import { indexRepo } from './repoIndexer';
+import { indexRepo, TreeNode } from './repoIndexer';
 import prisma from '../../lib/prisma';
 import { parseRepoUrl } from '../../planner/taskPlanner';
 import { Prisma } from '@prisma/client';
@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 interface SetupWorkspaceResult {
   success: boolean;
   workspacePath?: string;
+  repoTree?: TreeNode[];
   error?: string;
 }
 
@@ -29,8 +30,8 @@ export const setupWorkspace = async (
     console.log(`[${taskId}] Setting up workspace for ${parsedUrl.owner}/${parsedUrl.repo}`);
 
     // 2. Clone repository
-    // Create repo url 
-    const repoUrl = `https://github.com/${parsedUrl.owner}/${parsedUrl.repo}.git`
+    // Create repo url
+    const repoUrl = `https://github.com/${parsedUrl.owner}/${parsedUrl.repo}.git`;
 
     console.log(`[${taskId}] Cloning repository...`);
     const cloneResult = await cloneRepo(repoUrl, repoPath);
@@ -66,6 +67,7 @@ export const setupWorkspace = async (
     return {
       success: true,
       workspacePath: workspaceRoot,
+      repoTree: repoTree,
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);

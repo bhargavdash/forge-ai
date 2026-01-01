@@ -9,12 +9,19 @@ import { geminiModel } from '../llm/geminiClient';
 import { buildPlanningPrompt } from '../llm/promptBuilder';
 
 export type TaskPlan = {
-  summary: string;
-  steps: string[];
+  success: boolean;
+  summary?: string;
+  steps?: string[];
+  error?: string;
 };
 
-export const planTask = async (taskId: string) => {
+export const planTask = async (taskId: string): Promise<TaskPlan> => {
   try {
+    // validate input
+    if (!taskId) {
+      throw new Error('TaskId not available in plan task');
+    }
+
     // get task from db (now it contains the index tree written by repoIndexer inside setupWorkspace)
     const task = await prisma.task.findUnique({
       where: {
@@ -24,6 +31,10 @@ export const planTask = async (taskId: string) => {
 
     if (!task) {
       throw new Error('Task not found');
+    }
+
+    if (!task) {
+      throw new Error("Couldn't get task from DB for planTask");
     }
 
     // 1. parse the github url
@@ -36,6 +47,9 @@ export const planTask = async (taskId: string) => {
     // this returns us the title and body of the issue
     const issue = await fetchGithubIssue(parsedRepo.owner, parsedRepo.repo, parsedRepo.issueNumber);
 
+    if (!issue) {
+      throw new Error('Could not fetch issue details from github API');
+    }
     // 3. build the prompt
     const prompt = buildPlanningPrompt(
       issue.title,
@@ -48,6 +62,10 @@ export const planTask = async (taskId: string) => {
     // 4. Call Gemini
     const plan = await generatePlan(prompt);
 
+    if (!plan) {
+      throw new Error('Could not generate plan from LLM');
+    }
+
     await prisma.task.update({
       where: {
         id: taskId,
@@ -57,9 +75,21 @@ export const planTask = async (taskId: string) => {
       },
     });
 
-    return plan;
-  } catch (err) {
-    console.log(err);
+    return {
+      success: true,
+      summary: plan.summary,
+      steps: plan.steps,
+    };
+  } catch (planningError) {
+    const errorMessage =
+      planningError instanceof Error ? planningError.message : String(planningError);
+
+    console.log('Failed to plan task');
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
   }
 };
 
@@ -73,19 +103,14 @@ const generatePlan = async (prompt: string): Promise<TaskPlan> => {
   if (response && response.text) {
     const parsedResponse: TaskPlan = JSON.parse(response.text);
     return {
+      success: true,
       summary: parsedResponse.summary,
       steps: parsedResponse.steps,
     };
   }
   return {
-    summary: 'Analyze the issue and implement the required fix',
-    steps: [
-      'Understand the reported problem',
-      'Locate relevant files in the codebase',
-      'Apply the fix',
-      'Add or update tests',
-      'Verify the solution',
-    ],
+    success: false,
+    error: 'LLM did not generate correct format',
   };
 };
 
