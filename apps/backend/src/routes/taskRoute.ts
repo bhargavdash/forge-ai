@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { processTask } from '../orchestrator/taskOrchestrator';
+import { generateWorkspaceId } from '../services/utils/workspaceIdGenerator';
 
 const router = Router();
 
@@ -28,8 +29,11 @@ router.post('/post-task', async (req: Request, res: Response) => {
     }
 
     // create a new task in db and return the task id along with status
+    const id = crypto.randomUUID()
     const task = await prisma.task.create({
       data: {
+        id,
+        workspaceId: generateWorkspaceId(id),
         issueUrl,
         status: 'QUEUED',
         currentStep: 'NONE',

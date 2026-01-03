@@ -16,20 +16,18 @@ export interface DiffApplyResult {
  * @returns Result indicating success or failure with details
  */
 
-export const applyDiff = async (workspacePath: string, diff: string): Promise<DiffApplyResult> => {
+export const applyDiff = async (repoPath: string, diff: string): Promise<DiffApplyResult> => {
   let diffPath: string | null = null;
 
   try {
     // validate inputs
-    if (!workspacePath || typeof workspacePath !== 'string') {
+    if (!repoPath || typeof repoPath !== 'string') {
       throw new Error('Invalid workspace path');
     }
 
     if (!diff || typeof diff !== 'string' || diff.trim().length === 0) {
       throw new Error('Invalid or empty diff provided');
     }
-
-    const repoPath = path.join(workspacePath, 'repo');
 
     // Check if repo directory exists
     if (!fs.existsSync(repoPath)) {
@@ -38,7 +36,7 @@ export const applyDiff = async (workspacePath: string, diff: string): Promise<Di
 
     // create temp path file with timestamp to avoid collisions
     const timestamp = Date.now();
-    diffPath = path.join(workspacePath, `temp_${timestamp}.patch`);
+    diffPath = path.join(repoPath, `temp_${timestamp}.patch`);
 
     console.log(`Writing diff to temporary file: ${diffPath}`);
     fs.writeFileSync(diffPath, diff, 'utf-8');

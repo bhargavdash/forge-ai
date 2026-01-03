@@ -31,7 +31,8 @@ enum TaskStep {
 
 
 model Task {
-  id              String       @id    @default(uuid())
+  id              String       @id    
+  workspaceId     String       @unique
   issueUrl        String
   
   status          TaskStatus   @default(QUEUED)

@@ -9,6 +9,12 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export const geminiModel = async (prompt: string) => {
   try {
+    const temp = {
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    }
+    const count = await ai.models.countTokens(temp);
+    console.log("NO OF TOKENS GIVEN TO LLM: ", count.totalTokens);
     const result: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,

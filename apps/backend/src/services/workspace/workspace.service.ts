@@ -5,6 +5,10 @@ import { indexRepo, TreeNode } from './repoIndexer';
 import prisma from '../../lib/prisma';
 import { parseRepoUrl } from '../../planner/taskPlanner';
 import { Prisma } from '@prisma/client';
+import dotenv from 'dotenv'
+dotenv.config();
+
+const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "C:\\ws";
 
 interface SetupWorkspaceResult {
   success: boolean;
@@ -13,13 +17,29 @@ interface SetupWorkspaceResult {
   error?: string;
 }
 
+/**
+ * This function sets up the workspace where the github project will be worked upon
+ * @param taskId used in the path to identify the correct repo path 
+ * @param issueUrl required to generate github repoUrl to clone the project
+ * @returns workspacePath which is the root of the required folder 
+ * i.e - forge-ai/apps/backend/workspaces/[taskId]
+ */
+
 export const setupWorkspace = async (
   taskId: string,
+  workspaceId: string,
   issueUrl: string
 ): Promise<SetupWorkspaceResult> => {
-  const workspaceRoot = path.join(process.cwd(), 'workspaces', taskId);
+
+  const workspaceRoot = path.join(WORKSPACE_ROOT, workspaceId);
   const repoPath = path.join(workspaceRoot, 'repo');
   try {
+
+     const task = await prisma.task.findUnique({where: {id: taskId}});
+
+    if(!task){
+      throw new Error("Could not fetch task from DB..");
+    }
     // 1. parse the repo url
     const parsedUrl = parseRepoUrl(issueUrl);
 

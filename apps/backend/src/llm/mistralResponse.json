@@ -1,0 +1,26 @@
+{
+    "success": true,
+    "data": {
+        "id": "f7bb1288b3e447feb8a712e98760e2fb",
+        "object": "chat.completion",
+        "model": "devstral-2512",
+        "usage": {
+            "promptTokens": 7,
+            "completionTokens": 460,
+            "totalTokens": 467
+        },
+        "created": 1767282677,
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "content": "It looks like you've encountered an `[object Object]` output, which typically happens when JavaScript tries to convert an object to a string but doesn't have a proper string representation.\n\n### Common Causes:\n1. **Console Logging an Object**: If you log an object directly, some environments may display it as `[object Object]`.\n   ```javascript\n   const obj = { name: \"Alice\" };\n   console.log(obj); // May show [object Object] in some contexts\n   ```\n   **Fix**: Use `JSON.stringify()` to see the object's contents:\n   ```javascript\n   console.log(JSON.stringify(obj)); // Output: {\"name\":\"Alice\"}\n   ```\n\n2. **String Concatenation with Objects**: When you concatenate an object with a string, JavaScript calls `.toString()` on the object, which often returns `[object Object]`.\n   ```javascript\n   const obj = { name: \"Bob\" };\n   console.log(\"User: \" + obj); // Output: \"User: [object Object]\"\n   ```\n   **Fix**: Access the specific property you want:\n   ```javascript\n   console.log(\"User: \" + obj.name); // Output: \"User: Bob\"\n   ```\n\n3. **React/JSX Rendering**: If you try to render an object directly in JSX, React will show `[object Object]`.\n   ```jsx\n   const user = { name: \"Charlie\" };\n   return <div>{user}</div>; // Renders: [object Object]\n   ```\n   **Fix**: Render a specific property:\n   ```jsx\n   return <div>{user.name}</div>; // Renders: Charlie\n   ```\n\n4. **API Responses**: If an API returns an object and you try to display it directly, you might see this.\n   **Fix**: Parse the response properly:\n   ```javascript\n   fetch('https://api.example.com/data')\n     .then(response => response.json())\n     .then(data => console.log(data.someProperty));\n   ```\n\n### How to Debug:\n- Use `console.log(JSON.stringify(yourObject, null, 2))` for pretty-printed output.\n- Check if you're accidentally converting an object to a string where you shouldn't.",
+                    "toolCalls": null,
+                    "prefix": false,
+                    "role": "assistant"
+                },
+                "finishReason": "stop"
+            }
+        ]
+    }
+}

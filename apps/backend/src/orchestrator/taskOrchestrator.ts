@@ -5,13 +5,14 @@ import { runCoderAgent } from '../coder/coderAgent';
 import prisma from '../lib/prisma';
 import { planTask } from '../planner/taskPlanner';
 import { setupWorkspace } from '../services/workspace/workspace.service';
+import path from 'path';
 
 export const processTask = async (taskId: string, issueUrl: string) => {
   try {
     // update the task in the db for different steps
 
     // 1. Take up the new task and put it from queued to running
-    await prisma.task.update({
+    const task = await prisma.task.update({
       where: {
         id: taskId,
       },
@@ -26,32 +27,22 @@ export const processTask = async (taskId: string, issueUrl: string) => {
 
     // 2.1 Setup workspace before calling planner agent
 
-    const workspaceSetup = await setupWorkspace(taskId, issueUrl);
+    const workspace = await setupWorkspace(task.id, task.workspaceId, issueUrl);
 
-    if (!workspaceSetup.success || !workspaceSetup.repoTree || !workspaceSetup.workspacePath) {
-      // // step failed
-      // // TODO: update prisma
-      // await prisma.task.update({
-      //   where: {
-      //     id: taskId
-      //   },
-      //   data: {
-      //     status: 'FAILED',
-      //     currentStep: 'DONE'
-      //   }
-      // })
-
-      // // for now we return from here , will handle it gracefully later
-      // return;
-
+    if (!workspace.success || !workspace.repoTree || !workspace.workspacePath) {
       // throw error that step has failed
       throw new Error('Workspace setup failed');
     }
 
-    const { workspacePath, repoTree } = workspaceSetup;
+    const { workspacePath, repoTree } = workspace;
+    // this workspacePath is forge-ai/apps/backend/workspaces/[taskId] 
+    // inside this we have a repo folder which is the root folder of the cloned project. 
+    const repoPath = path.join(workspacePath, 'repo');
+    console.log(`THIS IS THE REPO PATH FOR TASK[${taskId}]: ${repoPath}`);
 
     // 2.2 call the planner agent
-    const plan = await planTask(taskId);
+    console.log("[TASK ORCHESTRATOR]: CALLING PLAN TASK WITH REPO PATH: ", repoPath);
+    const plan = await planTask(taskId, repoPath);
 
     if (!plan.success || !plan.summary || !plan.steps?.length) {
       throw new Error('Could not plan task using LLM');
@@ -75,7 +66,7 @@ export const processTask = async (taskId: string, issueUrl: string) => {
         steps: plan.steps,
       },
       repoTree,
-      workspacePath
+      repoPath
     );
 
     if (!coderAgentResult.success) {

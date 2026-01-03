@@ -20,20 +20,18 @@ interface FileReadResult {
  */
 
 export const readFilesContent = async (
-  workspacePath: string,
+  repoPath: string,
   relativePaths: string[]
 ): Promise<FileReadResult> => {
   try {
     // validate inputs
-    if (!workspacePath || typeof workspacePath !== 'string') {
-      throw new Error('Invalid workspace path');
+    if (!repoPath || typeof repoPath !== 'string') {
+      throw new Error('Invalid repo path');
     }
 
     if (!relativePaths || !Array.isArray(relativePaths) || relativePaths.length === 0) {
       throw new Error('No file paths provided');
     }
-
-    const repoPath = path.join(workspacePath, 'repo');
 
     // check if repo directory exists
     if (!fs.existsSync(repoPath)) {

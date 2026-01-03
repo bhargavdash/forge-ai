@@ -20,7 +20,7 @@ export const runCoderAgent = async (
   taskId: string,
   plan: { summary: string; steps: string[] },
   repoTree: TreeNode[],
-  workspacePath: string,
+  repoPath: string,
   maxRetries: number = 3
 ): Promise<CoderAgentResult> => {
   let iteration = 0;
@@ -41,7 +41,7 @@ export const runCoderAgent = async (
       throw new Error('Invalid repoTree: empty or undefined');
     }
 
-    if (!workspacePath || typeof workspacePath !== 'string') {
+    if (!repoPath || typeof repoPath !== 'string') {
       throw new Error('Invalid workspace path');
     }
 
@@ -81,7 +81,7 @@ export const runCoderAgent = async (
         // step 2: Read file contents
         console.log(`\n[${taskId}] Step 2: Reading file contents...`);
 
-        const readResult = await readFilesContent(workspacePath, selectedFiles);
+        const readResult = await readFilesContent(repoPath, selectedFiles);
 
         if (!readResult.success || !readResult.files) {
           throw new Error(`File reading failed: ${readResult.error}`);
@@ -104,7 +104,7 @@ export const runCoderAgent = async (
 
         console.log(`\n[${taskId}] Step 4: Applying changes to repo...`);
 
-        const applyResult = await applyDiff(workspacePath, diffResult.diff);
+        const applyResult = await applyDiff(repoPath, diffResult.diff);
 
         if (!applyResult.success) {
           // store error for next iteration

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const IGNORED_DIRS = new Set([
+export const IGNORED_DIRS = new Set([
   'node_modules',
   '.git',
   'dist',
