@@ -51,9 +51,9 @@ function App() {
   };
 
   return (
-    <>
-      <h1>Forge AI</h1>
-      <div>
+    <div className='bg-gray-900 w-screen h-screen text-gray-100 p-10'>
+      <h1 className='text-3xl font-bold underline mb-10'>Forge AI</h1>
+      <div className='mb-10'>
         <input type="text" ref={inputRef} placeholder="Enter github url" />
         <button onClick={handleClick}>Submit</button>
       </div>
@@ -76,7 +76,7 @@ function App() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
